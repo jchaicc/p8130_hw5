@@ -1,6 +1,9 @@
 ---
 title: "hw5"
-output: github_document
+output: 
+     pdf_document:
+         latex_engine: xelatex
+geometry: margin=2cm
 date: "2022-12-01"
 ---
 
