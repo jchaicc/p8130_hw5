@@ -26,14 +26,13 @@ state= state.x77 %>%
   janitor::clean_names()%>%
   select(life_exp,everything()) 
 
-write_csv(state, "state.csv")
-  
+
 ```
 
 ## a)
 ```{r}
 
-summary = function(variable){
+sum = function(variable){
   tibble(
     mean = mean(variable),
     sd = sd(variable),
@@ -44,7 +43,7 @@ summary = function(variable){
   )
 }
 
-map(state, summary) %>% 
+map(state, sum) %>% 
   bind_rows() %>% 
   mutate(variable = names(state)) %>% 
   select(variable,everything()) %>%
@@ -89,7 +88,8 @@ ggl_p+ggl_a
 ```
 
 ```{r fit with all predictors}
-multi.fit=lm(life_exp ~ ., data = state)
+multi.fit=lm(life_exp ~ ., data = state) 
+summary(multi.fit)
 
 ```
 
