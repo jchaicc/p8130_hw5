@@ -17,13 +17,16 @@ library(modelr)
 library(leaps)
 library(purrr)
 library(glmnet)
+library(knitr)
 ```
 
 ```{r}
 state= state.x77 %>%
   as.tibble()%>%
   janitor::clean_names()%>%
-  select(life_exp,everything())
+  select(life_exp,everything()) 
+
+write_csv(state, "state.csv")
   
 ```
 
@@ -86,8 +89,9 @@ ggl_p+ggl_a
 ```
 
 ```{r fit with all predictors}
-multi.fit=lm(life_exp ~ ., data = state)
-summary(multi.fit)
+state=as.tibble(state)
+multi_fit=lm(life_exp ~ ., data = state)
+summary(multi_fit)
 ```
 
 1) __Method I: Backward elimination__
