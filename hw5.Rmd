@@ -1,6 +1,6 @@
 ---
 title: "hw5"
-output: html_document
+output: github_document
 date: "2022-12-01"
 ---
 
@@ -15,6 +15,7 @@ library(tidyverse)
 library(patchwork)
 library(modelr)
 library(leaps)
+library(purrr)
 ```
 
 ```{r}
@@ -25,6 +26,7 @@ state= state.x77 %>%
   
 ```
 
+## a)
 ```{r}
 
 summary = function(variable){
@@ -46,4 +48,181 @@ map(state, summary) %>%
                caption = "Descriptive statistics of continuous variables")
 ```
 
+## b)
+
+```{r}
+plot(state)
+
+cor(state) %>%
+  knitr::kable(digits=2,caption="Correlation for all variables")
+
 ```
+
+```{r}
+state%>% select(-life_exp)%>%
+  funModeling::plot_num()
+```
+
+From the above plot, we can see that population and area are skewed, while all other variables are pretty normal distributed. We would want to try to make transformations on population and area.
+
+```{r}
+ggl_p = 
+state %>% 
+  mutate(population = log(population)) %>% 
+ ggplot(aes(x=population,y=..density..))+
+ geom_histogram()+
+ geom_line(stat = 'density')+
+    labs(x = "population")
+ggl_p
+
+ggl_a=state %>%
+  mutate(area = log(area)) %>% 
+ ggplot(aes(x=area,..density..))+
+ geom_histogram()+geom_line(stat = 'density')+
+    labs(x = "area")
+ggl_p+ggl_a
+ 
+```
+
+```{r fit with all predictors}
+multi.fit=lm(life_exp ~ ., data = state)
+summary(multi.fit)
+```
+
+1) __Method I: Backward elimination__
+
+By looking at the summary of full model regression, backward elimination starts eliminating the one with largest p value, we stop remove variables when their p-value are all less than 0.05. so we __remove area__ first
+
+```{r remove area}
+step1 <- update(multi.fit, . ~ . -area)
+summary(step1)
+```
+
+Then we __remove illiteracy__
+
+```{r remove illiteracy}
+step2 <- update(step1, . ~ . -illiteracy)
+summary(step2)
+```
+
+Then we __remove income__
+
+```{r}
+step3 <- update(step2, . ~ . -income)
+summary(step3)
+```
+
+Then we __population__
+
+```{r}
+step4 <- update(step2, . ~ . -population)
+summary(step4)
+```
+
+But population creates a better fit for the model, since the adjusted r square decreased a little after removing population, so I choose to keep population in the model.
+
+__Result__: backward selection model is 
+
+life expectancy = 71 + 0.00005population - 0.3Murder + 0.047hs_grad - 0.006frost
+
+2) __Method II: Forward elimination__
+
+```{r}
+variable=names(state)
+
+map(.x=variable,~lm(substitute(life_exp ~ i, list(i = as.name(.x))), data = state)) %>%
+  map_df(.,broom::tidy)%>%
+  filter(term!="(Intercept)") %>%
+  select(term,p.value)%>%
+  arrange(p.value)
+```
+
+So we first enter the one with the lowest p-value 2.26e-11 < 0.05: `murder`.
+
+```{r, warning=F}
+forward1 = lm(life_exp ~ murder, data = state) 
+summary(forward1)
+```
+
+
+```{r, warning=F}
+variable=names(state)
+map(.x = variable, ~update(forward1, substitute(.~. + i, list(i = as.name(.x))))) %>% 
+  map_df(., broom::tidy) %>% 
+  filter(term != "(Intercept)", term != "murder") %>% 
+  select(term,p.value) %>%
+  arrange(p.value)
+```
+Enter the one with the lowest p-value 0.00909: `hs_grad`.
+```{r, warning=F}
+forward2 <- update(forward1, . ~ . + hs_grad)
+summary(forward2)
+```
+
+```{r}
+variable=names(state)
+map(.x = variable, ~update(forward2, substitute(.~. + i, list(i = as.name(.x))))) %>% 
+  map_df(., broom::tidy) %>% 
+  filter(term != "(Intercept)", term != "murder",term!="hs_grad") %>% 
+  arrange(p.value)
+
+```
+
+Enter the one with the lowest p-value 0.00699: `frost`.
+```{r, warning=F}
+forward3 <- update(forward2, . ~ . + frost) 
+summary(forward3)
+```
+
+```{r}
+variable=names(state)
+map(.x = variable, ~update(forward3, substitute(.~. + i, list(i = as.name(.x))))) %>% 
+  map_df(., broom::tidy) %>% 
+  filter(term != "(Intercept)", term != "murder",term!="hs_grad",term!="frost") %>% 
+  arrange(p.value)
+
+```
+
+P-value of all new added variables are larger than 0.05, which means that they are not significant predictor, so we stop here.
+
+```{r, warning=F}
+forward_fit = lm(life_exp ~ murder + hs_grad + frost, data = state) %>%
+summary() %>% broom::tidy()
+```
+
+The model we obtained by forward elimination is life_exp ~ murder + hs_grad + frost.
+
+__Method III: stepwise regression__
+```{r}
+step.fit <- lm(life_exp ~ ., data = state)
+step(step.fit, direction = 'both') # select by AIC 
+```
+We choose the one with smallest AIC, hence the model selected by stepwise regression procedure is:  
+
+life_exp = 71 + 0.00005population - 0.3murder + 0.047hs_grad - 0.006frost
+
+## d)
+```{r}
+leaps(x = state %>% select(-life_exp), y = state[[1]], nbest = 1, method = "Cp")
+```
+
+```{r}
+leaps(x = state %>% select(-life_exp), y = state[[1]], nbest = 1, method = "adjr2")
+
+```
+
+```{r}
+sub = regsubsets(life_exp ~ ., data = state)
+summ=summary(sub) 
+
+```
+
+```{r}
+plot_cp = 
+  tibble(x = 2:8, y = rs$cp) %>% 
+  ggplot(aes(x = x, y = y)) +
+    geom_point() +
+    labs(x = "# predictors", y = "Cp")
+
+
+
