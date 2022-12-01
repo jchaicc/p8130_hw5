@@ -219,10 +219,20 @@ summ=summary(sub)
 
 ```{r}
 plot_cp = 
-  tibble(x = 2:8, y = rs$cp) %>% 
+  tibble(x = 2:8, y = summ$cp) %>% 
   ggplot(aes(x = x, y = y)) +
-    geom_point() +
+    geom_point() + geom_line()
     labs(x = "# predictors", y = "Cp")
+
+plot_adjr2 = 
+  tibble(x = 2:8, y = summ$adjr2) %>% 
+  ggplot(aes(x = x, y = y)) +
+    geom_point() + geom_line()
+    labs(x = "# predictors", y = "Adjusted R2")
+plot_cp + plot_adjr2
+```
+
+Based on the Cp and adjusted R2 criterion, I would choose the 4-predictor model. The best 4-predictor model is life_exp ~ population + murder + hs_grad + frost. It has the highest adjusted R2 and the lowest Cp value.
 
 
 
