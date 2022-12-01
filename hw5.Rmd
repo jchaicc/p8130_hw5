@@ -16,6 +16,7 @@ library(patchwork)
 library(modelr)
 library(leaps)
 library(purrr)
+library(glmnet)
 ```
 
 ```{r}
@@ -234,5 +235,22 @@ plot_cp + plot_adjr2
 
 Based on the Cp and adjusted R2 criterion, I would choose the 4-predictor model. The best 4-predictor model is life_exp ~ population + murder + hs_grad + frost. It has the highest adjusted R2 and the lowest Cp value.
 
+## e)
 
+```{r}
+lambda_seq <- 10^seq(-3, 0, by = .1)
+set.seed(2022)
+cv_object <- cv.glmnet(as.matrix(state[2:8]), state$life_exp,
+lambda = lambda_seq,
+nfolds = 5)
+cv_object
 
+```
+
+```{r}
+cv_object$lambda.min
+tibble(lambda = cv_object$lambda,
+mean_cv_error = cv_object$cvm) %>%
+ggplot(aes(x = lambda, y = mean_cv_error)) +
+geom_point()
+```
