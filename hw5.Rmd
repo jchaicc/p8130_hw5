@@ -89,8 +89,8 @@ ggl_p+ggl_a
 ```
 
 ```{r fit with all predictors}
-multi_fit=lm(life_exp ~ ., data = state)
-summary(multi_fit)
+multi.fit=lm(life_exp ~ ., data = state)
+
 ```
 
 1) __Method I: Backward elimination__
