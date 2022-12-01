@@ -1,0 +1,49 @@
+---
+title: "hw5"
+output: html_document
+date: "2022-12-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(patchwork)
+library(modelr)
+library(leaps)
+```
+
+```{r}
+state= state.x77 %>%
+  as.tibble()%>%
+  janitor::clean_names()%>%
+  select(life_exp,everything())
+  
+```
+
+```{r}
+
+summary = function(variable){
+  tibble(
+    mean = mean(variable),
+    sd = sd(variable),
+    median = median(variable),
+    maximum = max(variable),
+    minimum = min(variable),
+    IQR = IQR(variable)
+  )
+}
+
+map(state, summary) %>% 
+  bind_rows() %>% 
+  mutate(variable = names(state)) %>% 
+  select(variable,everything()) %>%
+  knitr::kable(digits = 2, 
+               caption = "Descriptive statistics of continuous variables")
+```
+
+```
