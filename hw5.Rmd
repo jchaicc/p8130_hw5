@@ -240,7 +240,7 @@ plot_adjr2 =
 plot_cp + plot_adjr2
 ```
 
-Based on the Cp and adjusted R2 criterion, I would choose the 4-predictor (5 parameters) model. The best 4-predictor model is life_exp ~ population + murder + hs_grad + frost. It has the highest adjusted R2 and the lowest Cp value.
+Based on the Cp and adjusted R2 criterion, I would choose the 4-predictors (5 parameters) model. The best 4-predictors model is life_exp ~ population + murder + hs_grad + frost. It has the highest adjusted R2 and the lowest Cp value.
 
 ## e)
 
