@@ -89,7 +89,6 @@ ggl_p+ggl_a
 ```
 
 ```{r fit with all predictors}
-state=as.tibble(state)
 multi_fit=lm(life_exp ~ ., data = state)
 summary(multi_fit)
 ```
