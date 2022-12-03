@@ -211,12 +211,12 @@ life_exp = 71 + 0.00005population - 0.3murder + 0.047hs_grad - 0.006frost
 
 * Do the procedures generate the same model?
 
-Backward elimination and forward elimination generated the same model: `life_exp ~ murder + hs_grad + frost`. However, stepwise regression generated a larger model with `population`.
+Backward elimination and forward elimination generated the same model: `life_exp ~ murder + hs_grad + frost`. However, stepwise regression generated a larger model with add a pridictor `population`.
 
 * Is there any variable a close call? What was your decision: keep or discard? Provide
 arguments for your choice.
 
-The variable `population` is a close call, with p-value = 0.052. I would keep it, because its p-value is quite close to 0.05. This model has a better AIC than a smaller model. Also, adding 'population' contributes to the goodness of fit by increasing the adjusted R2 from 0.6939 to 0.7126. 
+The variable `population` is a close call, with p-value = 0.052. I would keep it, because its p-value is close to 0.05. This model has a better AIC than a smaller model. And adding 'population' contributes to the goodness of fit by increasing the adjusted R2 from 0.6939 to 0.7126. 
 
 * Is there any association between ‘Illiteracy’ and ‘HS graduation rate’? Does your ‘subset’
 contain both?
@@ -282,7 +282,8 @@ Now I will try to refit the model with the best lambda.
 fit_bestcv <- glmnet(as.matrix(state[2:8]), state$life_exp, lambda = cv_object$lambda.min)
 coef(fit_bestcv)
 ```
-The results shows that `murder` and `hs_grad` should be included in the model. 
+The results shows that `murder` and `hs_grad` should be included in the model.
+
 ## f)
 
 ### Diagnostics
@@ -294,7 +295,9 @@ par(mfrow=c(2,2))
 plot(final_model)
 
 ```
+
 The residuals scattered evenly along the fitted values. We can assume that residuals have a mean of 0, and a constant variance, and independent of each other. The QQ plot shows that the tail slightly deviates from the straight line, this may indicates that there exists outliers. Additionally, there is no influential observations according to the residual vs leverage plot.
+
 ### 10-fold Cross Validation
 
 ```{r}
