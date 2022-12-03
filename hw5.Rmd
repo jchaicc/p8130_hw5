@@ -22,6 +22,7 @@ library(leaps)
 library(purrr)
 library(glmnet)
 library(knitr)
+library(caret)
 ```
 
 ```{r}
@@ -120,18 +121,16 @@ step3 <- update(step2, . ~ . -income)
 summary(step3)
 ```
 
-Then we __population__
+Then we __remove population__
 
 ```{r}
-step4 <- update(step2, . ~ . -population)
+step4 <- update(step3, . ~ . -population)
 summary(step4)
 ```
 
-But population creates a better fit for the model, since the adjusted r square decreased a little after removing population, so I choose to keep population in the model.
-
 __Result__: backward selection model is 
 
-life expectancy = 71 + 0.00005population - 0.3Murder + 0.047hs_grad - 0.006frost
+life expectancy = 71 - 0.3Murder + 0.047hs_grad - 0.006frost
 
 2) __Method II: Forward elimination__
 
@@ -209,6 +208,21 @@ We choose the one with smallest AIC, hence the model selected by stepwise regres
 
 life_exp = 71 + 0.00005population - 0.3murder + 0.047hs_grad - 0.006frost
 
+
+* Do the procedures generate the same model?
+
+Backward elimination and forward elimination generated the same model: `life_exp ~ murder + hs_grad + frost`. However, stepwise regression generated a larger model with `population`.
+
+* Is there any variable a close call? What was your decision: keep or discard? Provide
+arguments for your choice.
+
+The variable `population` is a close call, with p-value = 0.052. I would keep it, because its p-value is quite close to 0.05. This model has a better AIC than a smaller model. Also, adding 'population' contributes to the goodness of fit by increasing the adjusted R2 from 0.6939 to 0.7126. 
+
+* Is there any association between ‘Illiteracy’ and ‘HS graduation rate’? Does your ‘subset’
+contain both?
+
+The correlation coefficient between ‘Illiteracy’ and ‘HS graduation rate’ is -0.66, indicating a moderate association. My subset only contains 'HS graduate rate". ‘Illiteracy’ is not included.
+
 ## d)
 ```{r}
 leaps(x = state %>% select(-life_exp), y = state[[1]], nbest = 1, method = "Cp")
@@ -261,3 +275,41 @@ mean_cv_error = cv_object$cvm) %>%
 ggplot(aes(x = lambda, y = mean_cv_error)) +
 geom_point()
 ```
+When lambda is 0.1995, it will generate the lowest cv error. 
+
+Now I will try to refit the model with the best lambda.
+```{r}
+fit_bestcv <- glmnet(as.matrix(state[2:8]), state$life_exp, lambda = cv_object$lambda.min)
+coef(fit_bestcv)
+```
+The results shows that `murder` and `hs_grad` should be included in the model. 
+## f)
+
+### Diagnostics
+
+Based on the models chosen from c), d), and e), forward elimination, stepwise regression, and the criterion-based procedures, they all ended up with the model: life_exp~ population + murder+ hs_grad + frost. I will use this as my final model.
+```{r}
+final_model=lm(life_exp~population+murder+hs_grad+frost,data=state)
+par(mfrow=c(2,2))
+plot(final_model)
+
+```
+The residuals scattered evenly along the fitted values. We can assume that residuals have a mean of 0, and a constant variance, and independent of each other. The QQ plot shows that the tail slightly deviates from the straight line, this may indicates that there exists outliers. Additionally, there is no influential observations according to the residual vs leverage plot.
+### 10-fold Cross Validation
+
+```{r}
+train_control = trainControl(method ="cv", number = 10, savePredictions = TRUE)
+ 
+model = train(life_exp ~ murder + hs_grad + frost + population, 
+              data = state, 
+              trControl = train_control, 
+              method = 'lm')
+model
+predictions = model$resample
+```
+
+For 10-fold cross-validation, the `RMSE` is about 0.74, `Rsquare` is about 0.73, `MAE` is about 0.62. There are about 73% of variation explained by our model. 
+
+## g)
+
+The final model that I chose is life_exp ~ population + murder + hs_grad + frost. Some predictors are known as junk predictors, which will not provide help for us to predict life expectancy. The four predictors that was included, shows statistically significant when predicting life expectancy. After choosing the model, I tried to validate it. The R square shows to be 0.73, which means the model explained pretty well on the observed data.     
