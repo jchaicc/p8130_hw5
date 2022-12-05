@@ -92,6 +92,8 @@ ggl_p+ggl_a
  
 ```
 
+## c)
+
 ```{r fit with all predictors}
 multi.fit=lm(life_exp ~ ., data = state) 
 summary(multi.fit)
@@ -315,4 +317,4 @@ For 10-fold cross-validation, the `RMSE` is about 0.74, `Rsquare` is about 0.73,
 
 ## g)
 
-The final model that I chose is life_exp ~ population + murder + hs_grad + frost. Some predictors are known as junk predictors, which will not provide help for us to predict life expectancy. The four predictors that was included, shows statistically significant when predicting life expectancy. After choosing the model, I tried to validate it. The R square shows to be 0.73, which means the model explained pretty well on the observed data.     
+The final model that I chose is life_exp ~ population + murder + hs_grad + frost. Some predictors are known as junk predictors, which will not provide help for us to predict life expectancy. The four predictors that was included, shows statistically significant when predicting life expectancy. After choosing the model, I tried to validate it. The R square shows to be 0.73, which means the model explained pretty well on the observed data. Overall, the model that was chosen provided a quite well prediction on the life expectancy.     
